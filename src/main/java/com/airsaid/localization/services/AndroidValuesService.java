@@ -47,7 +47,8 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 /**
- * Operation service for the android value files. eg: strings.xml (or any string resource from values directory).
+ * Operation service for the android value files. eg: strings.xml (or any string
+ * resource from values directory).
  *
  * @author airsaid
  */
@@ -77,11 +78,9 @@ public final class AndroidValuesService {
    */
   public void loadValuesByAsync(@NotNull PsiFile valueFile, @NotNull Consumer<List<PsiElement>> consumer) {
     ApplicationManager.getApplication().executeOnPooledThread(() -> {
-          List<PsiElement> values = loadValues(valueFile);
-          ApplicationManager.getApplication().invokeLater(() ->
-              consumer.consume(values));
-        }
-    );
+      List<PsiElement> values = loadValues(valueFile);
+      ApplicationManager.getApplication().invokeLater(() -> consumer.consume(values));
+    });
   }
 
   /**
@@ -155,7 +154,8 @@ public final class AndroidValuesService {
       return;
     }
     ApplicationManager.getApplication().invokeLater(() -> ApplicationManager.getApplication().runWriteAction(() -> {
-      try (BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(valueFile, false), StandardCharsets.UTF_8))) {
+      try (BufferedWriter bw = new BufferedWriter(
+          new OutputStreamWriter(new FileOutputStream(valueFile, false), StandardCharsets.UTF_8))) {
         for (PsiElement value : values) {
           bw.write(value.getText());
         }
@@ -168,26 +168,31 @@ public final class AndroidValuesService {
   }
 
   /**
-   * Verify that the specified file is a string resource file in the values directory.
+   * Verify that the specified file is a string resource file in the values
+   * directory.
    *
    * @param file the verify file.
    * @return true: the file is a string resource file in the values directory.
    */
   public boolean isValueFile(@Nullable PsiFile file) {
-    if (file == null) return false;
+    if (file == null)
+      return false;
 
     PsiDirectory parent = file.getParent();
-    if (parent == null) return false;
+    if (parent == null)
+      return false;
 
     String parentName = parent.getName();
-    if (!"values".equals(parentName)) return false;
+    if (!"values".equals(parentName))
+      return false;
 
     String fileName = file.getName();
     return STRINGS_FILE_NAME_PATTERN.matcher(fileName).matches();
   }
 
   /**
-   * Get the value file of the specified language in the specified project resource directory.
+   * Get the value file of the specified language in the specified project
+   * resource directory.
    *
    * @param project     current project.
    * @param resourceDir specified resource directory.
@@ -197,11 +202,12 @@ public final class AndroidValuesService {
    */
   @Nullable
   public PsiFile getValuePsiFile(@NotNull Project project,
-                                 @NotNull VirtualFile resourceDir,
-                                 @NotNull Lang lang,
-                                 @NotNull String fileName) {
+      @NotNull VirtualFile resourceDir,
+      @NotNull Lang lang,
+      @NotNull String fileName) {
     return ApplicationManager.getApplication().runReadAction((Computable<PsiFile>) () -> {
-      VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByIoFile(getValueFile(resourceDir, lang, fileName));
+      VirtualFile virtualFile = LocalFileSystem.getInstance()
+          .findFileByIoFile(getValueFile(resourceDir, lang, fileName));
       if (virtualFile == null) {
         return null;
       }
@@ -210,7 +216,8 @@ public final class AndroidValuesService {
   }
 
   /**
-   * Get the value file in the {@code values} directory of the specified language in the resource directory.
+   * Get the value file in the {@code values} directory of the specified language
+   * in the resource directory.
    *
    * @param resourceDir specified resource directory.
    * @param lang        specified language.
@@ -223,7 +230,12 @@ public final class AndroidValuesService {
   }
 
   private String getValuesDirectoryName(@NotNull Lang lang) {
-    return "values-".concat(lang.getCode());
+    String[] parts = lang.getCode().split("-");
+    if (parts.length > 1) {
+      return "values-".concat(parts[0] + "-" + "r" + parts[1].toUpperCase());
+    } else {
+      return "values-".concat(lang.getCode());
+    }
   }
 
   /**
