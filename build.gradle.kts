@@ -2,6 +2,11 @@ import org.jetbrains.changelog.Changelog
 import org.jetbrains.changelog.date
 import org.jetbrains.changelog.markdownToHTML
 
+java {
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
+}
+
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
@@ -10,11 +15,13 @@ plugins {
   // Gradle IntelliJ Plugin
   id("org.jetbrains.intellij") version "1.13.3"
   // Gradle Changelog Plugin
-  id("org.jetbrains.changelog") version "2.1.2"
+  id("org.jetbrains.changelog") version "2.2.0"
 }
 
 group = properties("pluginGroup")
 version = properties("pluginVersion")
+
+
 
 // Configure project's dependencies
 repositories {
@@ -116,9 +123,12 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service:1.1.1")
 
   implementation("com.google.code.gson:gson:2.10.1")
-  implementation("com.aliyun:alimt20181012:1.0.3")
+  implementation("com.aliyun:alimt20181012:1.3.0")
+  implementation("com.fasterxml.jackson.core:jackson-core:2.12.5") // Use a version compatible with Java 17
+
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.9.3")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+
 
 }
