@@ -63,18 +63,22 @@ public class SettingsConfigurable implements Configurable {
     settingsComponent.setEnableCache(settingsState.isEnableCache());
     settingsComponent.setMaxCacheSize(settingsState.getMaxCacheSize());
     settingsComponent.setTranslationInterval(settingsState.getTranslationInterval());
+    settingsComponent.setSkipNonTranslatable(settingsState.isSkipNonTranslatable());
+    settingsComponent.setChatGPTModel(settingsState.getChatGPTModel());
   }
 
   @Override
   public boolean isModified() {
     SettingsState settingsState = SettingsState.getInstance();
     AbstractTranslator selectedTranslator = settingsComponent.getSelectedTranslator();
-    boolean isChanged = settingsState.getSelectedTranslator() == selectedTranslator;
-    isChanged |= settingsState.getAppId(selectedTranslator.getKey()).equals(selectedTranslator.getAppId());
-    isChanged |= settingsState.getAppKey(selectedTranslator.getKey()).equals(selectedTranslator.getAppKey());
-    isChanged |= settingsState.isEnableCache() == settingsComponent.isEnableCache();
-    isChanged |= settingsState.getMaxCacheSize() == settingsComponent.getMaxCacheSize();
-    isChanged |= settingsState.getTranslationInterval() == settingsComponent.getTranslationInterval();
+    boolean isChanged = !settingsState.getSelectedTranslator().getKey().equals(selectedTranslator.getKey());
+    isChanged |= !settingsState.getAppId(selectedTranslator.getKey()).equals(settingsComponent.getAppId());
+    isChanged |= !settingsState.getAppKey(selectedTranslator.getKey()).equals(settingsComponent.getAppKey());
+    isChanged |= settingsState.isEnableCache() != settingsComponent.isEnableCache();
+    isChanged |= settingsState.getMaxCacheSize() != settingsComponent.getMaxCacheSize();
+    isChanged |= settingsState.getTranslationInterval() != settingsComponent.getTranslationInterval();
+    isChanged |= settingsState.isSkipNonTranslatable() != settingsComponent.isSkipNonTranslatable();
+    isChanged |= !settingsState.getChatGPTModel().equals(settingsComponent.getChatGPTModel());
     LOG.info("isModified: " + isChanged);
     return isChanged;
   }
@@ -103,6 +107,8 @@ public class SettingsConfigurable implements Configurable {
     settingsState.setEnableCache(settingsComponent.isEnableCache());
     settingsState.setMaxCacheSize(settingsComponent.getMaxCacheSize());
     settingsState.setTranslationInterval(settingsComponent.getTranslationInterval());
+    settingsState.setSkipNonTranslatable(settingsComponent.isSkipNonTranslatable());
+    settingsState.setChatGPTModel(settingsComponent.getChatGPTModel());
 
     TranslatorService translatorService = TranslatorService.getInstance();
     translatorService.setSelectedTranslator(selectedTranslator);
@@ -122,6 +128,8 @@ public class SettingsConfigurable implements Configurable {
     settingsComponent.setEnableCache(settingsState.isEnableCache());
     settingsComponent.setMaxCacheSize(settingsState.getMaxCacheSize());
     settingsComponent.setTranslationInterval(settingsState.getTranslationInterval());
+    settingsComponent.setSkipNonTranslatable(settingsState.isSkipNonTranslatable());
+    settingsComponent.setChatGPTModel(settingsState.getChatGPTModel());
   }
 
   @Override

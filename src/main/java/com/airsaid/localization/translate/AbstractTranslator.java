@@ -51,6 +51,9 @@ public abstract class AbstractTranslator implements Translator, TranslatorConfig
     requestBuilder.connectTimeout(60 * 1000);
     configureRequestBuilder(requestBuilder);
 
+    LOG.info("Sending translation request to URL: " + requestUrl + " with parameters fromLang" + fromLang + ", toLang " + toLang + ", text: " + text);
+
+
     try {
       return requestBuilder.connect(request -> {
         String requestParams = getRequestParams(fromLang, toLang, text)

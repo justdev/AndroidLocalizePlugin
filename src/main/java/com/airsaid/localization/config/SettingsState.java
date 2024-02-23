@@ -129,6 +129,24 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
     state.translationInterval = intervalTime;
   }
 
+  public boolean isSkipNonTranslatable() {
+    return state.isSkipNonTranslatable;
+  }
+
+  public void setSkipNonTranslatable(boolean isSkipNonTranslatable) {
+    state.isSkipNonTranslatable = isSkipNonTranslatable;
+  }
+
+  // Methods for ChatGPT Model
+  public void setChatGPTModel(@NotNull String chatGPTModel) {
+    state.chatGPTModel = chatGPTModel;
+  }
+
+  @NotNull
+  public String getChatGPTModel() {
+    return state.chatGPTModel != null ? state.chatGPTModel : "gpt3.5-turbo"; // Default model can be set here if needed
+  }
+
   @Override
   public @Nullable SettingsState.State getState() {
     return state;
@@ -144,6 +162,8 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
     public Map<String, String> appIds = new HashMap<>();
     public boolean isEnableCache = true;
     public int maxCacheSize = 500;
-    public int translationInterval = 2; // 2 second
+    public int translationInterval = 2; // 2 seconds
+    public boolean isSkipNonTranslatable;
+    public String chatGPTModel; // Add this line for the ChatGPT model
   }
 }

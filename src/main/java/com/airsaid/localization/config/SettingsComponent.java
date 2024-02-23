@@ -58,10 +58,14 @@ public class SettingsComponent {
   private JBCheckBox enableCacheCheckBox;
   private ComboBox<String> maxCacheSizeComboBox;
   private ComboBox<String> translationIntervalComboBox;
+  private JCheckBox skipNonTranslatableCheckBox;
+  private JBLabel chatGPTModelLabel;
+  private JBTextField chatGPTModelField;
 
   public SettingsComponent() {
     initTranslatorComponents();
     initCacheComponents();
+    initChatGPTModelComponents();
   }
 
   private void initTranslatorComponents() {
@@ -75,6 +79,12 @@ public class SettingsComponent {
     translatorsComboBox.addItemListener(itemEvent -> {
       if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
         setSelectedTranslator(getSelectedTranslator());
+
+        // Additional logic to display ChatGPT model selection if ChatGPT is selected
+        AbstractTranslator selected = getSelectedTranslator();
+        boolean isChatGPT = selected.getName().equals("OpenAI ChatGPT"); // Check if the selected translator is ChatGPT
+        chatGPTModelLabel.setVisible(isChatGPT);
+        chatGPTModelField.setVisible(isChatGPT);
       }
     });
     applyLink.setListener((aSource, aLinkData) -> {
@@ -88,6 +98,13 @@ public class SettingsComponent {
     supportLanguagesButton.addActionListener(actionEvent -> {
       showSupportLanguagesDialog(getSelectedTranslator());
     });
+  }
+
+  private void initChatGPTModelComponents() {
+    chatGPTModelLabel.setVisible(false); // Initially hidden
+    chatGPTModelField.setVisible(false); // Initially hidden
+    // Set the model from the current settings, this will update later in setSelectedTranslator if needed
+    chatGPTModelField.setText(SettingsState.getInstance().getChatGPTModel());
   }
 
   private void initCacheComponents() {
@@ -143,13 +160,19 @@ public class SettingsComponent {
     }
 
     String applyAppIdUrl = selected.getApplyAppIdUrl();
-    if (!StringUtil.isEmpty(applyAppIdUrl)) {
-      applyLink.setVisible(true);
+    applyLink.setVisible(!StringUtil.isEmpty(applyAppIdUrl));
+    if (applyLink.isVisible()) {
       new HelpTooltip()
-          .setDescription("Apply for " + selected.getName() + " translation API service")
-          .installOn(applyLink);
-    } else {
-      applyLink.setVisible(false);
+              .setDescription("Apply for " + selected.getName() + " translation API service")
+              .installOn(applyLink);
+    }
+
+    // Handling ChatGPT model visibility and setting its value
+    boolean isChatGPT = "OpenAI ChatGPT".equals(selected.getName()); // Adjust this condition based on your actual implementation
+    chatGPTModelLabel.setVisible(isChatGPT);
+    chatGPTModelField.setVisible(isChatGPT);
+    if (isChatGPT) {
+      chatGPTModelField.setText(SettingsState.getInstance().getChatGPTModel());
     }
   }
 
@@ -205,5 +228,22 @@ public class SettingsComponent {
 
   public void setTranslationInterval(int intervalTime) {
     translationIntervalComboBox.setSelectedItem(String.valueOf(intervalTime));
+  }
+
+  public boolean isSkipNonTranslatable() {
+    return skipNonTranslatableCheckBox.isSelected();
+  }
+
+  public void setSkipNonTranslatable(boolean isSkipNonTranslatable) {
+    skipNonTranslatableCheckBox.setSelected(isSkipNonTranslatable);
+  }
+
+  @NotNull
+  public String getChatGPTModel() {
+    return chatGPTModelField.getText();
+  }
+
+  public void setChatGPTModel(@NotNull String model) {
+    chatGPTModelField.setText(model);
   }
 }

@@ -2,6 +2,11 @@
 
 # Android Localize Plugin Changelog
 
+## [3.1.0] (2024-02-23)
+
+### Added
+- Added ChatGPT model selection. [#118](https://github.com/Airsaid/AndroidLocalizePlugin/pull/118)
+
 ## [Unreleased]
 
 ## [3.0.0] (2023-03-24)
