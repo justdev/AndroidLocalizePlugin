@@ -93,7 +93,7 @@ public final class AndroidValuesService {
     return ApplicationManager.getApplication().runReadAction((Computable<List<PsiElement>>) () -> {
       LOG.info("loadValues valueFile: " + valueFile.getName());
       List<PsiElement> values = parseValuesXml(valueFile);
-      LOG.info("loadValues parsed " + valueFile.getName() + " result: " + values);
+      LOG.info("loadValues parsed " + values.size() + " items from " + valueFile.getName());
       return values;
     });
   }
@@ -107,37 +107,27 @@ public final class AndroidValuesService {
   }
 
   private List<PsiElement> parseValuesXml(@NotNull PsiFile valueFile) {
-    final XmlFile xmlFile = (XmlFile) valueFile;
+    if (!(valueFile instanceof XmlFile))
+      return Collections.emptyList();
 
+    final XmlFile xmlFile = (XmlFile) valueFile;
     final XmlDocument document = xmlFile.getDocument();
-    if (document == null) return Collections.emptyList();
+    if (document == null)
+      return Collections.emptyList();
 
     final XmlTag rootTag = document.getRootTag();
-    if (rootTag == null) return Collections.emptyList();
+    if (rootTag == null)
+      return Collections.emptyList();
 
-    PsiElement[] subTags = rootTag.getChildren();
-
-    if (!isSkipNonTranslatable()) {
-      return Arrays.asList(subTags);
-    }
-
-    List<PsiElement> values = new ArrayList<>(subTags.length);
-    boolean skipNext = false;
-
-    for (PsiElement e : subTags) {
-      if (skipNext) {
-        skipNext = false;
-        if (!(e instanceof XmlTag)) {
-          continue;
-        }
-      }
-      if ((e instanceof XmlTag) && !isTranslatable((XmlTag) e)) {
-        skipNext = true;
-      } else {
-        values.add(e);
+    List<PsiElement> values = new ArrayList<>();
+    for (PsiElement element : rootTag.getSubTags()) {
+      if (!(element instanceof XmlTag))
+        continue;
+      XmlTag tag = (XmlTag) element;
+      if (!isSkipNonTranslatable() || isTranslatable(tag)) {
+        values.add(element);
       }
     }
-
     return values;
   }
 
@@ -148,21 +138,14 @@ public final class AndroidValuesService {
    * @param valueFile specified file.
    */
   public void writeValueFile(@NotNull List<PsiElement> values, @NotNull File valueFile) {
-    boolean isCreateSuccess = FileUtil.createIfDoesntExist(valueFile);
-    if (!isCreateSuccess) {
-      LOG.error("Failed to write to " + valueFile.getPath() + " file: create failed!");
-      return;
-    }
     ApplicationManager.getApplication().invokeLater(() -> ApplicationManager.getApplication().runWriteAction(() -> {
       try (BufferedWriter bw = new BufferedWriter(
           new OutputStreamWriter(new FileOutputStream(valueFile, false), StandardCharsets.UTF_8))) {
         for (PsiElement value : values) {
-          bw.write(value.getText());
+          bw.write(value.getText() + System.lineSeparator());
         }
-        bw.flush();
       } catch (IOException e) {
-        e.printStackTrace();
-        LOG.error("Failed to write to " + valueFile.getPath() + " file.", e);
+        LOG.error("Failed to write to " + valueFile.getPath(), e);
       }
     }));
   }
@@ -175,15 +158,11 @@ public final class AndroidValuesService {
    * @return true: the file is a string resource file in the values directory.
    */
   public boolean isValueFile(@Nullable PsiFile file) {
-    if (file == null)
+    if (file == null || !(file.getParent() instanceof PsiDirectory))
       return false;
 
-    PsiDirectory parent = file.getParent();
-    if (parent == null)
-      return false;
-
-    String parentName = parent.getName();
-    if (!"values".equals(parentName))
+    String parentName = file.getParent().getName();
+    if (!parentName.startsWith("values"))
       return false;
 
     String fileName = file.getName();
@@ -201,16 +180,13 @@ public final class AndroidValuesService {
    * @return null if not exist, otherwise return the value file.
    */
   @Nullable
-  public PsiFile getValuePsiFile(@NotNull Project project,
-      @NotNull VirtualFile resourceDir,
-      @NotNull Lang lang,
+  public PsiFile getValuePsiFile(@NotNull Project project, @NotNull VirtualFile resourceDir, @NotNull Lang lang,
       @NotNull String fileName) {
     return ApplicationManager.getApplication().runReadAction((Computable<PsiFile>) () -> {
       VirtualFile virtualFile = LocalFileSystem.getInstance()
           .findFileByIoFile(getValueFile(resourceDir, lang, fileName));
-      if (virtualFile == null) {
+      if (virtualFile == null)
         return null;
-      }
       return PsiManager.getInstance(project).findFile(virtualFile);
     });
   }
@@ -225,8 +201,8 @@ public final class AndroidValuesService {
    * @return the value file.
    */
   @NotNull
-  public File getValueFile(@NotNull VirtualFile resourceDir, @NotNull Lang lang, String fileName) {
-    return new File(resourceDir.getPath().concat(File.separator).concat(getValuesDirectoryName(lang)), fileName);
+  public File getValueFile(@NotNull VirtualFile resourceDir, @NotNull Lang lang, @NotNull String fileName) {
+    return new File(resourceDir.getPath(), getValuesDirectoryName(lang) + File.separator + fileName);
   }
 
   private String getValuesDirectoryName(@NotNull Lang lang) {
@@ -245,9 +221,6 @@ public final class AndroidValuesService {
    * @return true: need translation. false: no translation is needed.
    */
   public boolean isTranslatable(@NotNull XmlTag xmlTag) {
-    return ApplicationManager.getApplication().runReadAction((Computable<Boolean>) () -> {
-      String translatableStr = xmlTag.getAttributeValue("translatable");
-      return Boolean.parseBoolean(translatableStr == null ? "true" : translatableStr);
-    });
+    return !"false".equals(xmlTag.getAttributeValue("translatable", "true"));
   }
 }

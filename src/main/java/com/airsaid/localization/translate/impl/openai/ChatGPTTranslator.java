@@ -17,6 +17,7 @@
 
 package com.airsaid.localization.translate.impl.openai;
 
+import com.airsaid.localization.config.SettingsState;
 import com.airsaid.localization.translate.AbstractTranslator;
 import com.airsaid.localization.translate.lang.Lang;
 import com.airsaid.localization.translate.lang.Languages;
@@ -31,11 +32,11 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 import java.util.List;
 
-
 @AutoService(AbstractTranslator.class)
 public class ChatGPTTranslator extends AbstractTranslator {
 
     private static final Logger LOG = Logger.getInstance(ChatGPTTranslator.class);
+    private static final String API_URL = "https://api.openai.com/v1/chat/completions";
     private static final String KEY = "ChatGPT";
 
     @Override
@@ -70,25 +71,35 @@ public class ChatGPTTranslator extends AbstractTranslator {
 
     @Override
     public String getAppKeyDisplay() {
-        return "KEY";
+        return "API Key";
     }
-
 
     @Override
     public @NotNull String getRequestUrl(@NotNull Lang fromLang, @NotNull Lang toLang, @NotNull String text) {
-        return "https://api.openai.com/v1/chat/completions";
+        return API_URL; // Ensure this is the correct API endpoint
     }
 
     @Override
     @NotNull
     public String getRequestBody(@NotNull Lang fromLang, @NotNull Lang toLang, @NotNull String text) {
         String lang = toLang.getEnglishName();
-        String roleSystem = String.format("Translate the user provided text into high quality, well written %s. Apply these 4 translation rules; 1.Keep the exact original formatting and style, 2.Keep translations concise and just repeat the original text for unchanged translations (e.g. 'OK'), 3.Audience: native %s speakers, 4.Text can be used in Android app UI (limited space, concise translations!).", lang, lang);
+        String escapedText = text.replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\b", "\\b")
+                .replace("\f", "\\f")
+                .replace("\n", "\\n")
+                .replace("\r", "\\r")
+                .replace("\t", "\\t");
+
+        String roleSystem = String.format(
+                "Translate the user provided text into high quality, well written %s. Apply these 4 translation rules; 1.Keep the exact original formatting and style, 2.Keep translations concise and just repeat the original text for unchanged translations (e.g. 'OK'), 3.Audience: native %s speakers, 4.Text can be used in Android app UI (limited space, concise translations!).",
+                lang, lang);
 
         ChatGPTMessage role = new ChatGPTMessage("system", roleSystem);
-        ChatGPTMessage msg = new ChatGPTMessage("user", String.format("Text to translate: %s", text));
+        ChatGPTMessage msg = new ChatGPTMessage("user", String.format("Text to translate: %s", escapedText));
 
-        OpenAIRequest body = new OpenAIRequest("gpt-3.5-turbo", List.of(role, msg));
+        String chatGptModel = SettingsState.getInstance().getChatGPTModel();
+        OpenAIRequest body = new OpenAIRequest(chatGptModel, List.of(role, msg));
 
         return GsonUtil.getInstance().getGson().toJson(body);
     }
@@ -102,9 +113,20 @@ public class ChatGPTTranslator extends AbstractTranslator {
     }
 
     @Override
-    public @NotNull String parsingResult(@NotNull Lang fromLang, @NotNull Lang toLang, @NotNull String text, @NotNull String resultText) {
-        LOG.info("parsingResult ChatGPT: " + resultText);
-        return GsonUtil.getInstance().getGson().fromJson(resultText, OpenAIResponse.class).getTranslation();
+    public @NotNull String parsingResult(@NotNull Lang fromLang, @NotNull Lang toLang, @NotNull String text,
+            @NotNull String resultText) {
+        // Safely parse the JSON response
+        try {
+            OpenAIResponse response = GsonUtil.getInstance().getGson().fromJson(resultText, OpenAIResponse.class);
+            if (response == null || response.getTranslation() == null) {
+                LOG.error("No translation found in response: " + resultText);
+                return text; // Fallback to original text
+            }
+            return response.getTranslation();
+        } catch (Exception e) {
+            LOG.error("Error parsing translation result: " + e.getMessage(), e);
+            return text; // Fallback to original text in case of parsing errors
+        }
     }
 
 }

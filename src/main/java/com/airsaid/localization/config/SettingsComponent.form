@@ -67,6 +67,25 @@
             </constraints>
             <properties/>
           </component>
+          <component id="chatGPTModelLabel" class="com.intellij.ui.components.JBLabel" binding="chatGPTModelLabel">
+          <constraints>
+            <grid row="3" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          </constraints>
+          <properties>
+            <text value="ChatGPT Model:"/>
+          </properties>
+        </component>
+        <component id="chatGPTModelField" class="com.intellij.ui.components.JBTextField" binding="chatGPTModelField">
+          <constraints>
+            <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+              <preferred-size width="150" height="-1"/>
+            </grid>
+          </constraints>
+          <properties>
+            <text value=""/>
+          </properties>
+        </component>
+
           <component id="63820" class="javax.swing.JButton" binding="supportLanguagesButton" default-binding="true">
             <constraints>
               <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>

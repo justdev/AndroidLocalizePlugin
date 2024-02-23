@@ -1,20 +1,3 @@
-/*
- * Copyright 2021 Airsaid. https://github.com/airsaid
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- */
-
 package com.airsaid.localization.config;
 
 import com.airsaid.localization.services.AndroidValuesService;
@@ -31,13 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @author airsaid
- */
-@State(
-    name = "com.airsaid.localization.config.SettingsState",
-    storages = {@Storage("androidLocalizeSettings.xml")}
-)
+@State(name = "com.airsaid.localization.config.SettingsState", storages = { @Storage("androidLocalizeSettings.xml") })
 @Service
 public final class SettingsState implements PersistentStateComponent<SettingsState.State> {
 
@@ -77,8 +54,8 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
   }
 
   public AbstractTranslator getSelectedTranslator() {
-    return StringUtil.isEmpty(state.selectedTranslatorKey) ? TranslatorService.getInstance().getDefaultTranslator() :
-        TranslatorService.getInstance().getTranslators().get(state.selectedTranslatorKey);
+    return StringUtil.isEmpty(state.selectedTranslatorKey) ? TranslatorService.getInstance().getDefaultTranslator()
+        : TranslatorService.getInstance().getTranslators().get(state.selectedTranslatorKey);
   }
 
   public void setSelectedTranslator(AbstractTranslator translator) {
@@ -140,6 +117,16 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
     state.isSkipNonTranslatable = isSkipNonTranslatable;
   }
 
+  // Methods for ChatGPT Model
+  public void setChatGPTModel(@NotNull String chatGPTModel) {
+    state.chatGPTModel = chatGPTModel;
+  }
+
+  @NotNull
+  public String getChatGPTModel() {
+    return state.chatGPTModel != null ? state.chatGPTModel : "gpt3.5-turbo"; // Default model can be set here if needed
+  }
+
   @Override
   public @Nullable SettingsState.State getState() {
     return state;
@@ -155,7 +142,8 @@ public final class SettingsState implements PersistentStateComponent<SettingsSta
     public Map<String, String> appIds = new HashMap<>();
     public boolean isEnableCache = true;
     public int maxCacheSize = 500;
-    public int translationInterval = 2; // 2 second
+    public int translationInterval = 2; // 2 seconds
     public boolean isSkipNonTranslatable;
+    public String chatGPTModel; // Add this line for the ChatGPT model
   }
 }

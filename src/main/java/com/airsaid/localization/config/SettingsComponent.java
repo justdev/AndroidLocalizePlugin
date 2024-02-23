@@ -59,16 +59,20 @@ public class SettingsComponent {
   private ComboBox<String> maxCacheSizeComboBox;
   private ComboBox<String> translationIntervalComboBox;
   private JCheckBox skipNonTranslatableCheckBox;
+  private JBLabel chatGPTModelLabel;
+  private JBTextField chatGPTModelField;
 
   public SettingsComponent() {
     initTranslatorComponents();
     initCacheComponents();
+    initChatGPTModelComponents();
   }
 
   private void initTranslatorComponents() {
     translatorsComboBox.setRenderer(new SimpleListCellRenderer<>() {
       @Override
-      public void customize(@NotNull JList<? extends AbstractTranslator> list, AbstractTranslator value, int index, boolean selected, boolean hasFocus) {
+      public void customize(@NotNull JList<? extends AbstractTranslator> list, AbstractTranslator value, int index,
+          boolean selected, boolean hasFocus) {
         setText(value.getName());
         setIcon(value.getIcon());
       }
@@ -76,6 +80,12 @@ public class SettingsComponent {
     translatorsComboBox.addItemListener(itemEvent -> {
       if (itemEvent.getStateChange() == ItemEvent.SELECTED) {
         setSelectedTranslator(getSelectedTranslator());
+
+        // Additional logic to display ChatGPT model selection if ChatGPT is selected
+        AbstractTranslator selected = getSelectedTranslator();
+        boolean isChatGPT = selected.getName().equals("ChatGPT"); // Check if the selected translator is ChatGPT
+        chatGPTModelLabel.setVisible(isChatGPT);
+        chatGPTModelField.setVisible(isChatGPT);
       }
     });
     applyLink.setListener((aSource, aLinkData) -> {
@@ -89,6 +99,13 @@ public class SettingsComponent {
     supportLanguagesButton.addActionListener(actionEvent -> {
       showSupportLanguagesDialog(getSelectedTranslator());
     });
+  }
+
+  private void initChatGPTModelComponents() {
+    chatGPTModelLabel = new JBLabel("ChatGPT Model:");
+    chatGPTModelField = new JBTextField();
+    chatGPTModelLabel.setVisible(false); // Initially hidden
+    chatGPTModelField.setVisible(false); // Initially hidden
   }
 
   private void initCacheComponents() {
@@ -214,5 +231,14 @@ public class SettingsComponent {
 
   public void setSkipNonTranslatable(boolean isSkipNonTranslatable) {
     skipNonTranslatableCheckBox.setSelected(isSkipNonTranslatable);
+  }
+
+  @NotNull
+  public String getChatGPTModel() {
+    return chatGPTModelField.getText();
+  }
+
+  public void setChatGPTModel(@NotNull String model) {
+    chatGPTModelField.setText(model);
   }
 }
